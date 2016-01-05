@@ -19,25 +19,61 @@
 	precision mediump float;
 	varying vec2 texpos;
 	uniform sampler2D tex0;
+
+	float width() { return PIXELS_WIDE; }
+	float height() { return PIXELS_TALL; }
+
+	int get_input_byte(int index) {
+		// Scale the index to work with chunks of 4
+		float findex = float(index) / 4.0;
+		float foffset = mod(findex, 4.0);
+
+		// Convert the 1D index to a 2D index (x and y)
+		float x = floor(mod(findex, height()));
+		float y = floor(findex / height());
+
+		// Get the vector at x and y
+		vec4 data = texture2D(tex0, vec2(x, y));
+
+		// Return the vector element based on the offset
+		if (foffset == 0.0)
+			return int(floor(data.r * 255.0));
+		else if (foffset == 1.0)
+			return int(floor(data.g * 255.0));
+		else if (foffset == 2.0)
+			return int(floor(data.b * 255.0));
+		else //if (foffset == 3.0)
+			return int(floor(data.a * 255.0));
+	}
+
+	int get_output_index() {
+		float x = floor(texpos.x * width());
+		float y = floor(texpos.y * height());
+		float i = (y * height()) + x;
+		return int(floor(i));
+	}
+
+	void set_word(float a, float b, float c, float d) {
+		gl_FragColor = vec4(a, b, c, d);
+	}
+
 	void main() {
 		const float A = 97.0 / 255.0;
-		const float S = 115.0 / 255.0;
+		const float B = 98.0 / 255.0;
+		const float C = 99.0 / 255.0;
 		const float SPACE = 95.0 / 255.0;
-		const float H = 104.0 / 255.0;
-		const float O = 111.0 / 255.0;
-		const float L = 108.0 / 255.0;
-		const float E = 101.0 / 255.0;
 
-		//gl_FragColor = vec4(0, 0, 0, 1);
-		//float x = floor(texpos.x * PIXELS_WIDE);
-		//float y = floor(texpos.y * PIXELS_TALL);
-		vec4 color = texture2D(tex0, texpos);
-		if (color.r == 1.0 /*mod(x, 2.0) == 1.0*/) {
-			gl_FragColor = vec4(A, S, S, SPACE);
+		int i = get_output_index();
+		if (i == 0) {
+			int byte = get_input_byte(0);
+			set_word(A, A, A, SPACE);
+		} else if (i == 1) {
+			int byte = get_input_byte(1);
+			set_word(B, B, B, SPACE);
 		} else {
-			gl_FragColor = vec4(H, O, L, E);
+			int byte = get_input_byte(2);
+			set_word(C, C, C, SPACE);
 		}
-		//gl_FragColor = color;
 	}
 </script>
 <script>
@@ -78,7 +114,8 @@
 
 	// Compile the Fragment Shader
 	var shaderSource = document.getElementById('fshader').textContent;
-	shaderSource = shaderSource.split('PIXELS_WIDE').join(surface.width + '.').split('PIXELS_TALL').join(surface.height + '.');
+	shaderSource = shaderSource.replace('PIXELS_WIDE', surface.width + '.0');
+	shaderSource = shaderSource.replace('PIXELS_TALL', surface.height + '.0');
 	var shaderFragment = gl.createShader(gl.FRAGMENT_SHADER);
 	gl.shaderSource(shaderFragment, shaderSource);
 	gl.compileShader(shaderFragment);
@@ -153,7 +190,8 @@
 		gl.readPixels(0, 0, surface.width, surface.height, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
 
 		var LINE_SIZE = 32;
-		for (var i=0; i<outBuffer.length; i+=LINE_SIZE) {
+		var BUFFER_SIZE = 512;// outBuffer.length
+		for (var i=0; i<BUFFER_SIZE; i+=LINE_SIZE) {
 			console.info(getLine(outBuffer, i, LINE_SIZE));
 		}
 	};
