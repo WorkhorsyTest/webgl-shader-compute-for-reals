@@ -5,7 +5,9 @@
 		<title>WebGL Compute Example</title>
 	</head>
 	<body>
+		<!--
 		<canvas id="surface" width="128" height="128" style="border: 1px solid black; background-color: red;"></canvas>
+		-->
 	</body>
 <script id="vshader" type="text/plain">
 	attribute vec2 vtxpos;
@@ -19,6 +21,21 @@
 	precision mediump float;
 	varying vec2 texpos;
 	uniform sampler2D tex0;
+
+	const float A = 97.0 / 255.0;
+	const float B = 98.0 / 255.0;
+	const float C = 99.0 / 255.0;
+	const float SPACE = 95.0 / 255.0;
+	const float _0 = 48.0 / 255.0;
+	const float _1 = 49.0 / 255.0;
+	const float _2 = 50.0 / 255.0;
+	const float _3 = 51.0 / 255.0;
+	const float _4 = 52.0 / 255.0;
+	const float _5 = 53.0 / 255.0;
+	const float _6 = 54.0 / 255.0;
+	const float _7 = 55.0 / 255.0;
+	const float _8 = 56.0 / 255.0;
+	const float _9 = 57.0 / 255.0;
 
 	float width() { return PIXELS_WIDE; }
 	float height() { return PIXELS_TALL; }
@@ -53,26 +70,52 @@
 		return int(floor(i));
 	}
 
-	void set_word(float a, float b, float c, float d) {
+	void set_dword(float a, float b, float c, float d) {
 		gl_FragColor = vec4(a, b, c, d);
 	}
 
-	void main() {
-		const float A = 97.0 / 255.0;
-		const float B = 98.0 / 255.0;
-		const float C = 99.0 / 255.0;
-		const float SPACE = 95.0 / 255.0;
+	int shift_right(int data, int times) {
+	    if (times > 0) {
+	        return int(float(data) / exp(vec2(2.0, float(times))));
+	    } else {
+	        return data;
+		}
+	}
 
+	int shift_left(int data, const int times) {
+	    if (times > 0)
+	        return int(float(data) * exp(vec2(2.0, float(times))));
+	    else
+	        return data;
+	}
+
+	vec4 int_to_vec4(const int data) {
+		int mask = shift_left(shift_right(data, 8), 8);
+		float a = float(data - mask) / 255.0;
+
+		mask = shift_left(shift_right(data, 16), 16);
+		float g = float(shift_right(data - mask, 8)) / 255.0;
+
+		mask = shift_left(shift_right(data, 24), 24);
+		float b = float(shift_right(data - mask, 16)) / 255.0;
+
+		float r = float(shift_right(data, 24)) / 255.0;
+		return vec4(r, g, b, a);
+	}
+
+	void main() {
 		int i = get_output_index();
 		if (i == 0) {
+			//vec4 ass = int_to_vec4(0x33FFFFFF);
+			//set_dword(ass.r, ass.g, ass.b, ass.a);
 			int byte = get_input_byte(0);
-			set_word(A, A, A, SPACE);
+			set_dword(A, A, A, SPACE);
 		} else if (i == 1) {
 			int byte = get_input_byte(1);
-			set_word(B, B, B, SPACE);
+			set_dword(B, B, B, SPACE);
 		} else {
 			int byte = get_input_byte(2);
-			set_word(C, C, C, SPACE);
+			set_dword(C, C, C, SPACE);
 		}
 	}
 </script>
@@ -81,8 +124,12 @@
 	. How do we have a different sized input and output buffer?
 	. How do we write more than one chunk as output at a time?
 */
+	var surface = document.createElement('canvas');
+	surface.width = 128;
+	surface.height = 128;
+
 	// Get A WebGL context
-	var surface = document.getElementById('surface');
+	//var surface = document.getElementById('surface');
 	var gl = surface.getContext('webgl') || surface.getContext('experimental-webgl');
 	console.info(gl);
 //	if (! gl) {
@@ -191,6 +238,10 @@
 
 		var LINE_SIZE = 32;
 		var BUFFER_SIZE = 512;// outBuffer.length
+		console.info(outBuffer[0]);
+		console.info(outBuffer[1]);
+		console.info(outBuffer[2]);
+		console.info(outBuffer[3]);
 		for (var i=0; i<BUFFER_SIZE; i+=LINE_SIZE) {
 			console.info(getLine(outBuffer, i, LINE_SIZE));
 		}
