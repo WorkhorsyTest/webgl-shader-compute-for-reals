@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>WebGL Compute Example</title>
+	</head>
+	<body>
+		<canvas id="surface" width="128" height="128" style="border: 1px solid black; background-color: red;"></canvas>
+	</body>
+<script src="glutil.js"></script>
+<script id="vshader" type="text/plain">
+	attribute vec2 vtxpos;
+    varying vec2 texpos;
+    void main() {
+        texpos = (vtxpos / 2.) + vec2(0.5, 0.5);
+        gl_Position = vec4(vtxpos, 0, 1);
+    }
+</script>
+<script id="fshader" type="text/plain">
+	precision mediump float;
+    varying vec2 texpos;
+    uniform sampler2D tex0;
+    void main() {
+
+		vec4 color = texture2D(tex0, texpos);
+		float x = floor(texpos.x * PIXELS_WIDE);
+	    float y = floor(texpos.y * PIXELS_TALL);
+
+		//gl_FragColor = vec4(0, 0, 0, 1);
+		if (mod(x, 2.0) == 1.0) {
+			gl_FragColor = vec4(97.0 / 255.0, 115.0 / 255.0, 115.0 / 255.0, 95.0 / 255.0);
+		} else {
+			gl_FragColor = vec4(104.0 / 255.0, 111.0 / 255.0, 108.0 / 255.0, 101.0 / 255.0);
+		}
+		//gl_FragColor = color;
+    }
+</script>
+<script>
+	var surface = document.getElementById('surface');
+	var vs      = document.getElementById('vshader').textContent;
+	var fs      = document.getElementById('fshader').textContent.split('PIXELS_WIDE').join(surface.width + '.').split('PIXELS_TALL').join(surface.height + '.');
+	var gl      = surface.getContext('webgl');
+	var program = createProgram(vs, fs);
+	prepScreenQuad();
+	gl.useProgram(program);
+	gl.enableVertexAttribArray(program.vertexPosArray);
+	gl.vertexAttribPointer(program.vtxpos, 2, gl.FLOAT, false, 0, 0);
+	program.vtxpos  = gl.getAttribLocation(program, 'vtxpos');
+	program.sampler = [gl.getUniformLocation(program, 'tex0')];
+	program.tex     = [gl.createTexture()];
+	program.texbuff = [new Uint8Array(4 * surface.width * surface.height)];
+	var pxlbuff = new Uint8Array(4 * surface.width * surface.height);
+
+
+	for (var i = 0; i < program.texbuff[0].length; ++i) {
+		program.texbuff[0][i] = 0;
+	}
+	//program.texbuff[0][0] = 100;
+
+	function blit () {
+		//requestAnimationFrame(blit);
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, program.tex[0]);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, surface.width, surface.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, program.texbuff[0]);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.uniform1i(program.sampler[0], 0);
+		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+		gl.readPixels(0, 0, surface.width, surface.height, gl.RGBA, gl.UNSIGNED_BYTE, pxlbuff);
+
+		for (var i=0; i<4*5; i+=4) {
+			console.log(String.fromCharCode(pxlbuff[i+0]) + ', ' + String.fromCharCode(pxlbuff[i+1]) + ', ' + String.fromCharCode(pxlbuff[i+2]) + ', ' + String.fromCharCode(pxlbuff[i+3]));
+		}
+	};
+	blit();
+</script>
+</html>
