@@ -20,21 +20,31 @@
 	varying vec2 texpos;
 	uniform sampler2D tex0;
 	void main() {
-
-		vec4 color = texture2D(tex0, texpos);
-		float x = floor(texpos.x * PIXELS_WIDE);
-		float y = floor(texpos.y * PIXELS_TALL);
+		const float A = 97.0 / 255.0;
+		const float S = 115.0 / 255.0;
+		const float SPACE = 95.0 / 255.0;
+		const float H = 104.0 / 255.0;
+		const float O = 111.0 / 255.0;
+		const float L = 108.0 / 255.0;
+		const float E = 101.0 / 255.0;
 
 		//gl_FragColor = vec4(0, 0, 0, 1);
-		if (color.r > 0.0 || color.g > 0.0 || color.b > 0.0 || color.a > 0.0 /*mod(x, 2.0) == 1.0*/) {
-			gl_FragColor = vec4(97.0 / 255.0, 115.0 / 255.0, 115.0 / 255.0, 95.0 / 255.0);
+		//float x = floor(texpos.x * PIXELS_WIDE);
+		//float y = floor(texpos.y * PIXELS_TALL);
+		vec4 color = texture2D(tex0, texpos);
+		if (color.r == 1.0 /*mod(x, 2.0) == 1.0*/) {
+			gl_FragColor = vec4(A, S, S, SPACE);
 		} else {
-			gl_FragColor = vec4(104.0 / 255.0, 111.0 / 255.0, 108.0 / 255.0, 101.0 / 255.0);
+			gl_FragColor = vec4(H, O, L, E);
 		}
 		//gl_FragColor = color;
 	}
 </script>
 <script>
+/*
+	. How do we have a different sized input and output buffer?
+	. How do we write more than one chunk as output at a time?
+*/
 	// Get A WebGL context
 	var surface = document.getElementById('surface');
 	var gl = surface.getContext('webgl') || surface.getContext('experimental-webgl');
@@ -112,7 +122,7 @@
 	var inBuffer = new Uint8Array(4 * surface.width * surface.height);
 	for (var i = 0; i < inBuffer.length; ++i) {
 		if (i == 0) {
-			inBuffer[i] = 1;
+			inBuffer[i] = 255;
 		} else {
 			inBuffer[i] = 0;
 		}
@@ -120,6 +130,15 @@
 
 	// Create the output buffer
 	var outBuffer = new Uint8Array(4 * surface.width * surface.height);
+	console.info('Out buffer size: ' + (4 * surface.width * surface.height));
+
+	function getLine(source, index, size) {
+		var line = new Array(size);
+		for (var i=0; i<size; ++i) {
+			line[i] = String.fromCharCode(source[index + i]);
+		}
+		return line.join('');
+	}
 
 	function blit() {
 		gl.activeTexture(gl.TEXTURE0);
@@ -133,8 +152,9 @@
 		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 		gl.readPixels(0, 0, surface.width, surface.height, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
 
-		for (var i=0; i<800; i+=4) {
-			console.log(String.fromCharCode(outBuffer[i+0]) + ', ' + String.fromCharCode(outBuffer[i+1]) + ', ' + String.fromCharCode(outBuffer[i+2]) + ', ' + String.fromCharCode(outBuffer[i+3]));
+		var LINE_SIZE = 32;
+		for (var i=0; i<outBuffer.length; i+=LINE_SIZE) {
+			console.info(getLine(outBuffer, i, LINE_SIZE));
 		}
 	};
 	blit();
