@@ -5,9 +5,7 @@
 		<title>WebGL Compute Example</title>
 	</head>
 	<body>
-		<!--
-		<canvas id="surface" width="128" height="128" style="border: 1px solid black; background-color: red;"></canvas>
-		-->
+		<input id="fileInput" type="file" required="required" />
 	</body>
 <script id="vshader" type="text/plain">
 	attribute vec2 vtxpos;
@@ -37,42 +35,10 @@
 	const float _8 = 56.0 / 255.0;
 	const float _9 = 57.0 / 255.0;
 
-	float width() { return PIXELS_WIDE; }
-	float height() { return PIXELS_TALL; }
-
-	int get_input_byte(int index) {
-		// Scale the index to work with chunks of 4
-		float findex = float(index) / 4.0;
-		float foffset = mod(findex, 4.0);
-
-		// Convert the 1D index to a 2D index (x and y)
-		float x = floor(mod(findex, height()));
-		float y = floor(findex / height());
-
-		// Get the vector at x and y
-		vec4 data = texture2D(tex0, vec2(x, y));
-
-		// Return the vector element based on the offset
-		if (foffset == 0.0)
-			return int(floor(data.r * 255.0));
-		else if (foffset == 1.0)
-			return int(floor(data.g * 255.0));
-		else if (foffset == 2.0)
-			return int(floor(data.b * 255.0));
-		else //if (foffset == 3.0)
-			return int(floor(data.a * 255.0));
-	}
-
-	int get_output_index() {
-		float x = floor(texpos.x * width());
-		float y = floor(texpos.y * height());
-		float i = (y * height()) + x;
-		return int(floor(i));
-	}
-
-	void set_dword(float a, float b, float c, float d) {
-		gl_FragColor = vec4(a, b, c, d);
-	}
+	float in_data_width() { return IN_DATA_SIZE; }
+	float in_data_height() { return IN_DATA_SIZE; }
+	float out_data_width() { return OUT_DATA_WIDTH; }
+	float out_data_height() { return OUT_DATA_HEIGHT; }
 
 	int shift_right(int data, int times) {
 	    if (times > 0) {
@@ -103,19 +69,80 @@
 		return vec4(r, g, b, a);
 	}
 
+	vec4 get_input_bytes(int index) {
+		// Scale the index to work with chunks of 4
+		float findex = float(index) / 4.0;
+//		float foffset = mod(findex, 4.0);
+
+		// Convert the 1D index to a 2D index (x and y)
+		float x = floor(mod(findex, in_data_height()));
+		float y = floor(findex / in_data_height());
+
+		// Get the vector at x and y
+		vec4 data = texture2D(tex0, vec2(x, y));
+
+		// Return the vector element based on the offset
+/*
+		if (foffset == 0.0)
+			return int(floor(data.r * 255.0));
+		else if (foffset == 1.0)
+			return int(floor(data.g * 255.0));
+		else if (foffset == 2.0)
+			return int(floor(data.b * 255.0));
+		else //if (foffset == 3.0)
+			return int(floor(data.a * 255.0));
+*/
+		return data;
+	}
+
+	int get_output_index() {
+		float x = floor(texpos.x * out_data_width());
+		float y = floor(texpos.y * out_data_width());
+		float i = (y * in_data_height()) + x;
+		return int(i);
+	}
+
+	void set_dword(float a, float b, float c, float d) {
+		gl_FragColor = vec4(a, b, c, d);
+	}
+
+	void set_bytes(vec4 data) {
+		gl_FragColor = data;
+	}
+
 	void main() {
+		//vec4 z = texture2D(tex0, vec2(texpos.x, texpos.y));
+		//vec4 z = texture2D(tex0, vec2(1.0 / in_data_width(), 0.0 / height()));
+		//gl_FragColor = z;
+
 		int i = get_output_index();
 		if (i == 0) {
-			//vec4 ass = int_to_vec4(0x33FFFFFF);
-			//set_dword(ass.r, ass.g, ass.b, ass.a);
-			int byte = get_input_byte(0);
-			set_dword(A, A, A, SPACE);
+			gl_FragColor = texture2D(tex0, vec2(0.0 / in_data_width(), 0.0 / in_data_height()));
 		} else if (i == 1) {
-			int byte = get_input_byte(1);
-			set_dword(B, B, B, SPACE);
+			gl_FragColor = texture2D(tex0, vec2(1.0 / in_data_width(), 0.0 / in_data_height()));
+			//gl_FragColor = vec4(97.0 / 255.0, 98.0 / 255.0, 0, 0);
+		} else if (i == 2) {
+			gl_FragColor = texture2D(tex0, vec2(2.0 / in_data_width(), 0.0 / in_data_height()));
+		} else if (i == 3) {
+			gl_FragColor = texture2D(tex0, vec2(3.0 / in_data_width(), 0.0 / in_data_height()));
+		} else if (i == 4) {
+			gl_FragColor = texture2D(tex0, vec2(4.0 / in_data_width(), 0.0 / in_data_height()));
+		} else if (i == 5) {
+			gl_FragColor = texture2D(tex0, vec2(5.0 / in_data_width(), 0.0 / in_data_height()));
+		} else if (i == 6) {
+			gl_FragColor = texture2D(tex0, vec2(6.0 / in_data_width(), 0.0 / in_data_height()));
+		} else if (i == 7) {
+			gl_FragColor = texture2D(tex0, vec2(7.0 / in_data_width(), 0.0 / in_data_height()));
+		} else if (i == 8) {
+			gl_FragColor = texture2D(tex0, vec2(8.0 / in_data_width(), 0.0 / in_data_height()));
+		} else if (i == 9) {
+			gl_FragColor = texture2D(tex0, vec2(9.0 / in_data_width(), 0.0 / in_data_height()));
+		} else if (i == 10) {
+			gl_FragColor = texture2D(tex0, vec2(10.0 / in_data_width(), 0.0 / in_data_height()));
 		} else {
-			int byte = get_input_byte(2);
-			set_dword(C, C, C, SPACE);
+			//vec4 bytes = get_input_bytes(i);
+			//set_bytes(bytes);
+			gl_FragColor = vec4(1, 0, 0, 1);
 		}
 	}
 </script>
@@ -124,128 +151,175 @@
 	. How do we have a different sized input and output buffer?
 	. How do we write more than one chunk as output at a time?
 */
-	var surface = document.createElement('canvas');
-	surface.width = 128;
-	surface.height = 128;
+	function main(array_buffer) {
+		console.info(array_buffer);
+		console.info(array_buffer.byteLength);
 
-	// Get A WebGL context
-	//var surface = document.getElementById('surface');
-	var gl = surface.getContext('webgl') || surface.getContext('experimental-webgl');
-	console.info(gl);
-//	if (! gl) {
-//		return;
-//	}
+		var OUT_DATA_WIDTH = 128;
+		var OUT_DATA_HEIGHT = 128;
+		var IN_DATA_SIZE = Math.pow(2, 13);//8192;
+		console.info(IN_DATA_SIZE);
+		console.info('In buffer size: ' + (4 * IN_DATA_SIZE * IN_DATA_SIZE));
 
-	// Print the open gl version
-	console.info(gl.getParameter(gl.VERSION));
-	console.info(gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
-	console.info(gl.getParameter(gl.VENDOR));
-	var ext = gl.getExtension('WEBGL_debug_renderer_info');
-	if (ext) {
-		console.info(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL));
-		console.info(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));
-	}
+		// Get A WebGL context
+		var surface = document.createElement('canvas');
+		surface.width = OUT_DATA_WIDTH;
+		surface.height = OUT_DATA_HEIGHT;
+		surface.setAttribute('style', "border: 1px solid black");
+		document.body.appendChild(surface);
+		var gl = surface.getContext('webgl') || surface.getContext('experimental-webgl');
+		console.info(gl);
+	//	if (! gl) {
+	//		return;
+	//	}
 
-	// Compile the Vertex Shader
-	var shaderSource = document.getElementById('vshader').textContent;
-	var shaderVertex = gl.createShader(gl.VERTEX_SHADER);
-	gl.shaderSource(shaderVertex, shaderSource);
-	gl.compileShader(shaderVertex);
-	var compiled = gl.getShaderParameter(shaderVertex, gl.COMPILE_STATUS);
-	console.info(compiled);
-	if (! compiled) {
-		var lastError = gl.getShaderInfoLog(shaderVertex);
-		console.error("Shader compile error:" + lastError);
-		gl.deleteShader(shaderVertex);
-	}
-
-	// Compile the Fragment Shader
-	var shaderSource = document.getElementById('fshader').textContent;
-	shaderSource = shaderSource.replace('PIXELS_WIDE', surface.width + '.0');
-	shaderSource = shaderSource.replace('PIXELS_TALL', surface.height + '.0');
-	var shaderFragment = gl.createShader(gl.FRAGMENT_SHADER);
-	gl.shaderSource(shaderFragment, shaderSource);
-	gl.compileShader(shaderFragment);
-	var compiled = gl.getShaderParameter(shaderFragment, gl.COMPILE_STATUS);
-	console.info(compiled);
-	if (! compiled) {
-		var lastError = gl.getShaderInfoLog(shaderFragment);
-		console.error("Shader compile error:" + lastError);
-		gl.deleteShader(shaderFragment);
-	}
-
-	// Build the program
-	var program = gl.createProgram();
-	gl.attachShader(program, shaderVertex);
-	gl.attachShader(program, shaderFragment);
-	gl.linkProgram(program);
-	var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
-	console.info(linked);
-	if (! linked) {
-		var lastError = gl.getProgramInfoLog(program);
-		console.error("Program link error:" + lastError);
-	}
-	gl.useProgram(program);
-
-	// Create a vertex buffer
-	var vertexPosBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
-	var vertices = [-1, -1, 1, -1, -1, 1, 1, 1];
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-	vertexPosBuffer.itemSize = 2;
-	vertexPosBuffer.numItems = 4;
-
-	// Setup the attributes, uniforms, and textures
-	gl.enableVertexAttribArray(program.vertexPosArray);
-	gl.vertexAttribPointer(program.vtxpos, 2, gl.FLOAT, false, 0, 0);
-	program.vtxpos  = gl.getAttribLocation(program, 'vtxpos');
-	program.sampler = [gl.getUniformLocation(program, 'tex0')];
-	program.tex     = [gl.createTexture()];
-
-	// Create the input buffer
-	var inBuffer = new Uint8Array(4 * surface.width * surface.height);
-	for (var i = 0; i < inBuffer.length; ++i) {
-		if (i == 0) {
-			inBuffer[i] = 255;
-		} else {
-			inBuffer[i] = 0;
+		// Print the open gl version
+		console.info(gl.getParameter(gl.VERSION));
+		console.info(gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+		console.info(gl.getParameter(gl.VENDOR));
+		var ext = gl.getExtension('WEBGL_debug_renderer_info');
+		if (ext) {
+			console.info(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL));
+			console.info(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));
 		}
+
+		// Compile the Vertex Shader
+		var shaderSource = document.getElementById('vshader').textContent;
+		var shaderVertex = gl.createShader(gl.VERTEX_SHADER);
+		gl.shaderSource(shaderVertex, shaderSource);
+		gl.compileShader(shaderVertex);
+		var compiled = gl.getShaderParameter(shaderVertex, gl.COMPILE_STATUS);
+		console.info(compiled);
+		if (! compiled) {
+			var lastError = gl.getShaderInfoLog(shaderVertex);
+			console.error("Shader compile error:" + lastError);
+			gl.deleteShader(shaderVertex);
+		}
+
+		// Compile the Fragment Shader
+		var shaderSource = document.getElementById('fshader').textContent;
+		shaderSource = shaderSource.replace(/OUT_DATA_WIDTH/g, OUT_DATA_WIDTH + '.0');
+		shaderSource = shaderSource.replace(/OUT_DATA_HEIGHT/g, OUT_DATA_HEIGHT + '.0');
+		shaderSource = shaderSource.replace(/IN_DATA_SIZE/g, IN_DATA_SIZE + '.0');
+
+		var shaderFragment = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(shaderFragment, shaderSource);
+		gl.compileShader(shaderFragment);
+		var compiled = gl.getShaderParameter(shaderFragment, gl.COMPILE_STATUS);
+		console.info(compiled);
+		if (! compiled) {
+			var lastError = gl.getShaderInfoLog(shaderFragment);
+			console.error("Shader compile error:" + lastError);
+			gl.deleteShader(shaderFragment);
+		}
+
+		// Build the program
+		var program = gl.createProgram();
+		gl.attachShader(program, shaderVertex);
+		gl.attachShader(program, shaderFragment);
+		gl.linkProgram(program);
+		var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
+		console.info(linked);
+		if (! linked) {
+			var lastError = gl.getProgramInfoLog(program);
+			console.error("Program link error:" + lastError);
+		}
+		gl.useProgram(program);
+
+		// Create a vertex buffer
+		var vertexPosBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer);
+		var vertices = [-1, -1, 1, -1, -1, 1, 1, 1];
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+		vertexPosBuffer.itemSize = 2;
+		vertexPosBuffer.numItems = 4;
+
+		// Setup the attributes, uniforms, and textures
+		gl.enableVertexAttribArray(program.vertexPosArray);
+		gl.vertexAttribPointer(program.vtxpos, 2, gl.FLOAT, false, 0, 0);
+		program.vtxpos  = gl.getAttribLocation(program, 'vtxpos');
+		program.sampler = [gl.getUniformLocation(program, 'tex0')];
+		program.tex     = [gl.createTexture()];
+
+		// Create the input buffer
+		var inBuffer = new Uint8Array(4 * IN_DATA_SIZE * IN_DATA_SIZE);
+		console.info('In buffer size:  ' + inBuffer.byteLength);
+		console.info('Data size:       ' + array_buffer.byteLength);
+		var view = new Uint8Array(array_buffer);
+		for (var i = 0; i < view.length; ++i) {
+			inBuffer[i] = view[i];
+		}
+
+		// Create the output buffer
+		var outBuffer = new Uint8Array(4 * OUT_DATA_WIDTH * OUT_DATA_HEIGHT);
+		console.info('Out buffer size: ' + outBuffer.byteLength);
+
+		function getLine(source, index, size) {
+			var line = new Array(size);
+			for (var i=0; i<size; ++i) {
+				line[i] = String.fromCharCode(source[index + i]);
+			}
+			return line.join('');
+		}
+
+		function blit() {
+			gl.activeTexture(gl.TEXTURE0);
+			gl.bindTexture(gl.TEXTURE_2D, program.tex[0]);
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, IN_DATA_SIZE, IN_DATA_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, inBuffer);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+			gl.uniform1i(program.sampler[0], 0);
+			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+			gl.readPixels(0, 0, OUT_DATA_WIDTH, OUT_DATA_HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
+
+			var LINE_SIZE = 100;
+			var BUFFER_SIZE = 512;// outBuffer.length
+			console.info(outBuffer[0] + ', ' + String.fromCharCode(outBuffer[0]));
+			console.info(outBuffer[1] + ', ' + String.fromCharCode(outBuffer[1]));
+			console.info(outBuffer[2] + ', ' + String.fromCharCode(outBuffer[2]));
+			console.info(outBuffer[3] + ', ' + String.fromCharCode(outBuffer[3]));
+			console.info(outBuffer[4] + ', ' + String.fromCharCode(outBuffer[4]));
+			console.info(outBuffer[5] + ', ' + String.fromCharCode(outBuffer[5]));
+			console.info(outBuffer[6] + ', ' + String.fromCharCode(outBuffer[6]));
+			console.info(outBuffer[7] + ', ' + String.fromCharCode(outBuffer[7]));
+			console.info(outBuffer[8] + ', ' + String.fromCharCode(outBuffer[8]));
+			console.info(outBuffer[9] + ', ' + String.fromCharCode(outBuffer[9]));
+			console.info(outBuffer[10] + ', ' + String.fromCharCode(outBuffer[10]));
+			console.info(outBuffer[11] + ', ' + String.fromCharCode(outBuffer[11]));
+			console.info(outBuffer[12] + ', ' + String.fromCharCode(outBuffer[12]));
+			console.info(outBuffer[13] + ', ' + String.fromCharCode(outBuffer[13]));
+			console.info(outBuffer[14] + ', ' + String.fromCharCode(outBuffer[14]));
+			console.info(outBuffer[15] + ', ' + String.fromCharCode(outBuffer[15]));
+			console.info(outBuffer[16] + ', ' + String.fromCharCode(outBuffer[16]));
+			console.info(outBuffer[17] + ', ' + String.fromCharCode(outBuffer[17]));
+			console.info(outBuffer[18] + ', ' + String.fromCharCode(outBuffer[18]));
+			console.info(outBuffer[19] + ', ' + String.fromCharCode(outBuffer[19]));
+
+			for (var i=0; i<BUFFER_SIZE; i+=LINE_SIZE) {
+				console.info(getLine(outBuffer, i, LINE_SIZE));
+			}
+		};
+		blit();
 	}
 
-	// Create the output buffer
-	var outBuffer = new Uint8Array(4 * surface.width * surface.height);
-	console.info('Out buffer size: ' + (4 * surface.width * surface.height));
-
-	function getLine(source, index, size) {
-		var line = new Array(size);
-		for (var i=0; i<size; ++i) {
-			line[i] = String.fromCharCode(source[index + i]);
+	var fileInput = document.getElementById('fileInput');
+	fileInput.onchange = function() {
+		// Just return if there is no file selected
+		if (fileInput.files.length === 0) {
+			entryList.innerHTML = 'No file selected';
+			return;
 		}
-		return line.join('');
-	}
 
-	function blit() {
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, program.tex[0]);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, surface.width, surface.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, inBuffer);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.uniform1i(program.sampler[0], 0);
-		gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-		gl.readPixels(0, 0, surface.width, surface.height, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
-
-		var LINE_SIZE = 32;
-		var BUFFER_SIZE = 512;// outBuffer.length
-		console.info(outBuffer[0]);
-		console.info(outBuffer[1]);
-		console.info(outBuffer[2]);
-		console.info(outBuffer[3]);
-		for (var i=0; i<BUFFER_SIZE; i+=LINE_SIZE) {
-			console.info(getLine(outBuffer, i, LINE_SIZE));
-		}
+		// Get the selected file
+		var file = fileInput.files[0];
+		var reader = new FileReader();
+		reader.onload = function (evt) {
+			var array_buffer = reader.result;
+			main(array_buffer);
+		};
+		reader.readAsArrayBuffer(file);
 	};
-	blit();
 </script>
 </html>
