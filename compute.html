@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>WebGL Compute Example</title>
+		<title>WebGL Untar Example</title>
 	</head>
 	<body>
 		<input id="fileInput" type="file" required="required" />
@@ -96,19 +96,45 @@
 	void main() {
 		//texture2D(tex0, vec2(texpos.x, texpos.y));
 		//texture2D(tex0, vec2(0.0 / in_data_width(), 0.0 / in_data_height()));
+		const int TAR_TYPE_FILE = 0;
+		const int TAR_TYPE_DIR = 5;
 
+		const int TAR_HEADER_SIZE = 512;
+		const int TAR_TYPE_OFFSET = 156;
+		const int TAR_TYPE_SIZE = (TAR_TYPE_OFFSET+1);
+		const int TAR_SIZE_OFFSET = 124;
+		const int TAR_SIZE_SIZE = (TAR_SIZE_OFFSET+12);
+		const int TAR_NAME_OFFSET = 0;
+		const int TAR_NAME_SIZE = (TAR_NAME_OFFSET+100);
 		int i = get_output_index();
-		if (i >= 0 && i <= int(in_data_length()) * 4) {
+
+		if (i >= TAR_NAME_OFFSET/4 && i < TAR_NAME_SIZE/4) {
+			vec4 bytes = get_input_bytes(i);
+			//bytes = vec4(0, 0, 0, 0);
+			set_output_bytes(bytes);
+		} else if (i >= TAR_SIZE_OFFSET/4 && i < TAR_SIZE_SIZE/4) {
+			vec4 bytes = get_input_bytes(i);
+			//bytes = vec4(0, 0, 0, 0);
+			set_output_bytes(bytes);
+		} else if (i >= TAR_TYPE_OFFSET/4 && i <= TAR_TYPE_SIZE/4) {
+			vec4 bytes = get_input_bytes(i);
+			bytes = vec4(bytes.r, 0, 0, 0);
+			//bytes = vec4(0, 0, 0, 0);
+			set_output_bytes(bytes);
+/*
+		} else if (i >= 0 && i <= int(in_data_length()) * 4) {
+			vec4 file_name[25];
 			vec4 bytes = get_input_bytes(i);
 			set_output_bytes(bytes);
+*/
 		} else {
 			//vec4 bytes = get_input_bytes(i);
 			//set_bytes(bytes);
-			gl_FragColor = vec4(1, 0, 0, 1);
+			gl_FragColor = vec4(0, 0, 0, 0);
 		}
 	}
 </script>
-<script>
+<script type="text/javascript">
 /*
 	. How do we write more than one chunk as output at a time?
 */
@@ -239,6 +265,10 @@
 			}
 		};
 		blit();
+
+		console.info(getLine(outBuffer, 0, 100));
+		console.info(parseInt(getLine(outBuffer, 124, 136), 8));
+		console.info(getLine(outBuffer, 156, 157));
 	}
 
 	var fileInput = document.getElementById('fileInput');
