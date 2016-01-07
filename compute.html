@@ -35,11 +35,12 @@
 	const float _8 = 56.0 / 255.0;
 	const float _9 = 57.0 / 255.0;
 
+	float in_data_length() { return IN_DATA_LENGTH; }
 	float in_data_width() { return IN_DATA_SIZE; }
 	float in_data_height() { return IN_DATA_SIZE; }
 	float out_data_width() { return OUT_DATA_WIDTH; }
 	float out_data_height() { return OUT_DATA_HEIGHT; }
-
+/*
 	int shift_right(int data, int times) {
 		if (times > 0) {
 			return int(float(data) / exp(vec2(2.0, float(times))));
@@ -68,33 +69,7 @@
 		float r = float(shift_right(data, 24)) / 255.0;
 		return vec4(r, g, b, a);
 	}
-
-	vec4 get_input_bytes(int index) {
-		// Scale the index to work with chunks of 4
-		float findex = float(index) / 4.0;
-//		float foffset = mod(findex, 4.0);
-
-		// Convert the 1D index to a 2D index (x and y)
-		float x = floor(mod(findex, in_data_height()));
-		float y = floor(findex / in_data_height());
-
-		// Get the vector at x and y
-		vec4 data = texture2D(tex0, vec2(x, y));
-
-		// Return the vector element based on the offset
-/*
-		if (foffset == 0.0)
-			return int(floor(data.r * 255.0));
-		else if (foffset == 1.0)
-			return int(floor(data.g * 255.0));
-		else if (foffset == 2.0)
-			return int(floor(data.b * 255.0));
-		else //if (foffset == 3.0)
-			return int(floor(data.a * 255.0));
 */
-		return data;
-	}
-
 	int get_output_index() {
 		float x = floor(texpos.x * out_data_width());
 		float y = floor(texpos.y * out_data_width());
@@ -102,43 +77,30 @@
 		return int(i);
 	}
 
-	void set_dword(float a, float b, float c, float d) {
-		gl_FragColor = vec4(a, b, c, d);
+	vec4 get_input_bytes(int index) {
+		// Convert the 1D index to a 2D index (x and y)
+		float findex = float(index);
+		float x = floor(mod(findex, in_data_height()));
+		float y = floor(findex / in_data_height());
+
+		// Get the pixel at x and y
+		vec2 cords = vec2(x / in_data_width(), y / in_data_height());
+		vec4 data = texture2D(tex0, cords);
+		return data;
 	}
 
-	void set_bytes(vec4 data) {
-		gl_FragColor = data;
+	void set_output_bytes(vec4 bytes) {
+		gl_FragColor = bytes;
 	}
 
 	void main() {
-		//vec4 z = texture2D(tex0, vec2(texpos.x, texpos.y));
-		//vec4 z = texture2D(tex0, vec2(1.0 / in_data_width(), 0.0 / height()));
-		//gl_FragColor = z;
+		//texture2D(tex0, vec2(texpos.x, texpos.y));
+		//texture2D(tex0, vec2(0.0 / in_data_width(), 0.0 / in_data_height()));
 
 		int i = get_output_index();
-		if (i == 0) {
-			gl_FragColor = texture2D(tex0, vec2(0.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 1) {
-			gl_FragColor = texture2D(tex0, vec2(1.0 / in_data_width(), 0.0 / in_data_height()));
-			//gl_FragColor = vec4(97.0 / 255.0, 98.0 / 255.0, 0, 0);
-		} else if (i == 2) {
-			gl_FragColor = texture2D(tex0, vec2(2.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 3) {
-			gl_FragColor = texture2D(tex0, vec2(3.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 4) {
-			gl_FragColor = texture2D(tex0, vec2(4.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 5) {
-			gl_FragColor = texture2D(tex0, vec2(5.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 6) {
-			gl_FragColor = texture2D(tex0, vec2(6.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 7) {
-			gl_FragColor = texture2D(tex0, vec2(7.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 8) {
-			gl_FragColor = texture2D(tex0, vec2(8.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 9) {
-			gl_FragColor = texture2D(tex0, vec2(9.0 / in_data_width(), 0.0 / in_data_height()));
-		} else if (i == 10) {
-			gl_FragColor = texture2D(tex0, vec2(10.0 / in_data_width(), 0.0 / in_data_height()));
+		if (i >= 0 && i <= int(in_data_length()) * 4) {
+			vec4 bytes = get_input_bytes(i);
+			set_output_bytes(bytes);
 		} else {
 			//vec4 bytes = get_input_bytes(i);
 			//set_bytes(bytes);
@@ -151,14 +113,10 @@
 	. How do we write more than one chunk as output at a time?
 */
 	function main(array_buffer) {
-		console.info(array_buffer);
-		console.info(array_buffer.byteLength);
-
 		var OUT_DATA_WIDTH = 128;
 		var OUT_DATA_HEIGHT = 128;
-		var IN_DATA_SIZE = Math.pow(2, 13);//8192;
-		console.info(IN_DATA_SIZE);
-		console.info('In buffer size: ' + (4 * IN_DATA_SIZE * IN_DATA_SIZE));
+		var IN_DATA_SIZE = Math.pow(2, 7);//128 * 128 texture;
+		var IN_DATA_LENGTH = array_buffer.byteLength;
 
 		// Get A WebGL context
 		var surface = document.createElement('canvas');
@@ -167,20 +125,22 @@
 		surface.setAttribute('style', "border: 1px solid black");
 		document.body.appendChild(surface);
 		var gl = surface.getContext('webgl') || surface.getContext('experimental-webgl');
-		console.info(gl);
-	//	if (! gl) {
-	//		return;
-	//	}
+		if (! gl) {
+			console.error('Failed to init WebGL');
+			return;
+		}
 
 		// Print the open gl version
-		console.info(gl.getParameter(gl.VERSION));
-		console.info(gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
-		console.info(gl.getParameter(gl.VENDOR));
+		console.info('WebGL Version: ' + gl.getParameter(gl.VERSION));
+		console.info('GLSL Version: ' + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+		console.info('Vendor: ' + gl.getParameter(gl.VENDOR));
+		/*
 		var ext = gl.getExtension('WEBGL_debug_renderer_info');
 		if (ext) {
 			console.info(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL));
 			console.info(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL));
 		}
+		*/
 
 		// Compile the Vertex Shader
 		var shaderSource = document.getElementById('vshader').textContent;
@@ -188,7 +148,6 @@
 		gl.shaderSource(shaderVertex, shaderSource);
 		gl.compileShader(shaderVertex);
 		var compiled = gl.getShaderParameter(shaderVertex, gl.COMPILE_STATUS);
-		console.info(compiled);
 		if (! compiled) {
 			var lastError = gl.getShaderInfoLog(shaderVertex);
 			console.error("Shader compile error:" + lastError);
@@ -200,13 +159,13 @@
 		shaderSource = shaderSource.replace(/OUT_DATA_WIDTH/g, OUT_DATA_WIDTH + '.0');
 		shaderSource = shaderSource.replace(/OUT_DATA_HEIGHT/g, OUT_DATA_HEIGHT + '.0');
 		shaderSource = shaderSource.replace(/IN_DATA_SIZE/g, IN_DATA_SIZE + '.0');
+		shaderSource = shaderSource.replace(/IN_DATA_LENGTH/g, IN_DATA_LENGTH + '.0');
 
 		// Compile the Fragment Shader
 		var shaderFragment = gl.createShader(gl.FRAGMENT_SHADER);
 		gl.shaderSource(shaderFragment, shaderSource);
 		gl.compileShader(shaderFragment);
 		var compiled = gl.getShaderParameter(shaderFragment, gl.COMPILE_STATUS);
-		console.info(compiled);
 		if (! compiled) {
 			var lastError = gl.getShaderInfoLog(shaderFragment);
 			console.error("Shader compile error:" + lastError);
@@ -219,7 +178,6 @@
 		gl.attachShader(program, shaderFragment);
 		gl.linkProgram(program);
 		var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
-		console.info(linked);
 		if (! linked) {
 			var lastError = gl.getProgramInfoLog(program);
 			console.error("Program link error:" + lastError);
@@ -275,29 +233,8 @@
 			gl.readPixels(0, 0, OUT_DATA_WIDTH, OUT_DATA_HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
 
 			var LINE_SIZE = 100;
-			var BUFFER_SIZE = 512;// outBuffer.length
-			console.info(outBuffer[0] + ', ' + String.fromCharCode(outBuffer[0]));
-			console.info(outBuffer[1] + ', ' + String.fromCharCode(outBuffer[1]));
-			console.info(outBuffer[2] + ', ' + String.fromCharCode(outBuffer[2]));
-			console.info(outBuffer[3] + ', ' + String.fromCharCode(outBuffer[3]));
-			console.info(outBuffer[4] + ', ' + String.fromCharCode(outBuffer[4]));
-			console.info(outBuffer[5] + ', ' + String.fromCharCode(outBuffer[5]));
-			console.info(outBuffer[6] + ', ' + String.fromCharCode(outBuffer[6]));
-			console.info(outBuffer[7] + ', ' + String.fromCharCode(outBuffer[7]));
-			console.info(outBuffer[8] + ', ' + String.fromCharCode(outBuffer[8]));
-			console.info(outBuffer[9] + ', ' + String.fromCharCode(outBuffer[9]));
-			console.info(outBuffer[10] + ', ' + String.fromCharCode(outBuffer[10]));
-			console.info(outBuffer[11] + ', ' + String.fromCharCode(outBuffer[11]));
-			console.info(outBuffer[12] + ', ' + String.fromCharCode(outBuffer[12]));
-			console.info(outBuffer[13] + ', ' + String.fromCharCode(outBuffer[13]));
-			console.info(outBuffer[14] + ', ' + String.fromCharCode(outBuffer[14]));
-			console.info(outBuffer[15] + ', ' + String.fromCharCode(outBuffer[15]));
-			console.info(outBuffer[16] + ', ' + String.fromCharCode(outBuffer[16]));
-			console.info(outBuffer[17] + ', ' + String.fromCharCode(outBuffer[17]));
-			console.info(outBuffer[18] + ', ' + String.fromCharCode(outBuffer[18]));
-			console.info(outBuffer[19] + ', ' + String.fromCharCode(outBuffer[19]));
-
-			for (var i=0; i<BUFFER_SIZE; i+=LINE_SIZE) {
+			var BUFFER_SIZE = IN_DATA_LENGTH;// outBuffer.length
+			for (var i=0; i<outBuffer.length; i+=LINE_SIZE) {
 				console.info(getLine(outBuffer, i, LINE_SIZE));
 			}
 		};
