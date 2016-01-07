@@ -41,18 +41,18 @@
 	float out_data_height() { return OUT_DATA_HEIGHT; }
 
 	int shift_right(int data, int times) {
-	    if (times > 0) {
-	        return int(float(data) / exp(vec2(2.0, float(times))));
-	    } else {
-	        return data;
+		if (times > 0) {
+			return int(float(data) / exp(vec2(2.0, float(times))));
+		} else {
+			return data;
 		}
 	}
 
 	int shift_left(int data, const int times) {
-	    if (times > 0)
-	        return int(float(data) * exp(vec2(2.0, float(times))));
-	    else
-	        return data;
+		if (times > 0)
+			return int(float(data) * exp(vec2(2.0, float(times))));
+		else
+			return data;
 	}
 
 	vec4 int_to_vec4(const int data) {
@@ -148,7 +148,6 @@
 </script>
 <script>
 /*
-	. How do we have a different sized input and output buffer?
 	. How do we write more than one chunk as output at a time?
 */
 	function main(array_buffer) {
@@ -196,12 +195,13 @@
 			gl.deleteShader(shaderVertex);
 		}
 
-		// Compile the Fragment Shader
+		// Inject our sizes into the shader source code
 		var shaderSource = document.getElementById('fshader').textContent;
 		shaderSource = shaderSource.replace(/OUT_DATA_WIDTH/g, OUT_DATA_WIDTH + '.0');
 		shaderSource = shaderSource.replace(/OUT_DATA_HEIGHT/g, OUT_DATA_HEIGHT + '.0');
 		shaderSource = shaderSource.replace(/IN_DATA_SIZE/g, IN_DATA_SIZE + '.0');
 
+		// Compile the Fragment Shader
 		var shaderFragment = gl.createShader(gl.FRAGMENT_SHADER);
 		gl.shaderSource(shaderFragment, shaderSource);
 		gl.compileShader(shaderFragment);
@@ -237,9 +237,9 @@
 		// Setup the attributes, uniforms, and textures
 		gl.enableVertexAttribArray(program.vertexPosArray);
 		gl.vertexAttribPointer(program.vtxpos, 2, gl.FLOAT, false, 0, 0);
-		program.vtxpos  = gl.getAttribLocation(program, 'vtxpos');
+		program.vtxpos = gl.getAttribLocation(program, 'vtxpos');
 		program.sampler = [gl.getUniformLocation(program, 'tex0')];
-		program.tex     = [gl.createTexture()];
+		program.tex = [gl.createTexture()];
 
 		// Create the input buffer
 		var inBuffer = new Uint8Array(4 * IN_DATA_SIZE * IN_DATA_SIZE);
