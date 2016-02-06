@@ -220,9 +220,21 @@
 			}
 		}
 */
+		var result = vec4_to_int(outBuffer, 0);
+
+		console.info(result);
 		for (var i=0; i<4; ++i) {
 			console.info(i + ', ' + outBuffer[i].toString(16));
 		}
+	}
+
+	function vec4_to_int(outBuffer, offset) {
+		var result = 0;
+		result += (outBuffer[offset + 0] << 0);
+		result += (outBuffer[offset + 1] << 8);
+		result += (outBuffer[offset + 2] << 16);
+		result += (outBuffer[offset + 3] << 24);
+		return result;
 	}
 
 	document.getElementById('go').addEventListener('click', function() {
