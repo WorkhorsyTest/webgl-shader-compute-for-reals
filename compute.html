@@ -34,33 +34,33 @@
 	}
 
 	int shift_right(int data, int times) {
-	    if (times > 0) {
-	        return data / int(pow(2.0, float(times)));
-	    } else {
-	        return data;
-	    }
+		if (times > 0) {
+			return data / int(pow(2.0, float(times)));
+		} else {
+			return data;
+		}
 	}
 
 	int shift_left(int data, const int times) {
-	    if (times > 0) {
-	        return data * int(pow(2.0, float(times)));
-	    } else {
-	        return data;
-	    }
+		if (times > 0) {
+			return data * int(pow(2.0, float(times)));
+		} else {
+			return data;
+		}
 	}
 
 	vec4 int_to_vec4(const int data) {
-	    int mask = shift_left(shift_right(data, 8), 8);
-	    float r = float(data - mask) / 255.0;
+		int mask = shift_left(shift_right(data, 8), 8);
+		float r = float(data - mask) / 255.0;
 
-	    mask = shift_left(shift_right(data, 16), 16);
-	    float g = float(shift_right(data - mask, 8)) / 255.0;
+		mask = shift_left(shift_right(data, 16), 16);
+		float g = float(shift_right(data - mask, 8)) / 255.0;
 
-	    mask = shift_left(shift_right(data, 24), 24);
-	    float b = float(shift_right(data - mask, 16)) / 255.0;
+		mask = shift_left(shift_right(data, 24), 24);
+		float b = float(shift_right(data - mask, 16)) / 255.0;
 
-	    float a = float(shift_right(data, 24)) / 255.0;
-	    return vec4(r, g, b, a);
+		float a = float(shift_right(data, 24)) / 255.0;
+		return vec4(r, g, b, a);
 	}
 
 	const int N = 43;
