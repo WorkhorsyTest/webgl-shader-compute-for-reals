@@ -20,16 +20,13 @@
 	varying vec2 texpos;
 	uniform sampler2D tex0;
 
-	float in_data_length() { return IN_DATA_LENGTH; }
-	float in_data_width() { return IN_DATA_SIZE; }
-	float in_data_height() { return IN_DATA_SIZE; }
-	float out_data_width() { return OUT_DATA_WIDTH; }
-	float out_data_height() { return OUT_DATA_HEIGHT; }
+	float in_data_size() { return IN_DATA_SIZE; }
+	float out_data_size() { return OUT_DATA_SIZE; }
 
 	int get_output_index() {
-		float x = floor(texpos.x * out_data_width());
-		float y = floor(texpos.y * out_data_width());
-		float i = (y * in_data_height()) + x;
+		float x = floor(texpos.x * out_data_size());
+		float y = floor(texpos.y * out_data_size());
+		float i = (y * in_data_size()) + x;
 		return int(i);
 	}
 
@@ -93,15 +90,13 @@
 
 	function main() {
 		var array_buffer = new ArrayBuffer(8);
-		var OUT_DATA_WIDTH = 128;
-		var OUT_DATA_HEIGHT = 128;
+		var OUT_DATA_SIZE = 128;
 		var IN_DATA_SIZE = Math.pow(2, 7);//128 * 128 texture;
-		var IN_DATA_LENGTH = array_buffer.byteLength;
 
 		// Get A WebGL context
 		var surface = document.createElement('canvas');
-		surface.width = OUT_DATA_WIDTH;
-		surface.height = OUT_DATA_HEIGHT;
+		surface.width = OUT_DATA_SIZE;
+		surface.height = OUT_DATA_SIZE;
 		surface.setAttribute('style', "border: 1px solid black");
 		document.body.appendChild(surface);
 		var gl = surface.getContext('webgl') || surface.getContext('experimental-webgl');
@@ -136,10 +131,8 @@
 
 		// Inject our sizes into the shader source code
 		var shaderSource = document.getElementById('fshader').textContent;
-		shaderSource = shaderSource.replace(/OUT_DATA_WIDTH/g, OUT_DATA_WIDTH + '.0');
-		shaderSource = shaderSource.replace(/OUT_DATA_HEIGHT/g, OUT_DATA_HEIGHT + '.0');
+		shaderSource = shaderSource.replace(/OUT_DATA_SIZE/g, OUT_DATA_SIZE + '.0');
 		shaderSource = shaderSource.replace(/IN_DATA_SIZE/g, IN_DATA_SIZE + '.0');
-		shaderSource = shaderSource.replace(/IN_DATA_LENGTH/g, IN_DATA_LENGTH + '.0');
 
 		// Compile the Fragment Shader
 		var shaderFragment = gl.createShader(gl.FRAGMENT_SHADER);
@@ -189,7 +182,7 @@
 		}
 
 		// Create the output buffer
-		var outBuffer = new Uint8Array(4 * OUT_DATA_WIDTH * OUT_DATA_HEIGHT);
+		var outBuffer = new Uint8Array(4 * OUT_DATA_SIZE * OUT_DATA_SIZE);
 		console.info('Out buffer size: ' + outBuffer.byteLength);
 
 		function blit() {
@@ -202,7 +195,7 @@
 			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 			gl.uniform1i(program.sampler[0], 0);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-			gl.readPixels(0, 0, OUT_DATA_WIDTH, OUT_DATA_HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
+			gl.readPixels(0, 0, OUT_DATA_SIZE, OUT_DATA_SIZE, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
 		};
 		blit();
 
