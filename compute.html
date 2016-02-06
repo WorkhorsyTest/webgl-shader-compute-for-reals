@@ -192,14 +192,6 @@
 		var outBuffer = new Uint8Array(4 * OUT_DATA_WIDTH * OUT_DATA_HEIGHT);
 		console.info('Out buffer size: ' + outBuffer.byteLength);
 
-		function getLine(source, index, size) {
-			var line = new Array(size);
-			for (var i=0; i<size; ++i) {
-				line[i] = String.fromCharCode(source[index + i]);
-			}
-			return line.join('');
-		}
-
 		function blit() {
 			gl.activeTexture(gl.TEXTURE0);
 			gl.bindTexture(gl.TEXTURE_2D, program.tex[0]);
@@ -213,19 +205,22 @@
 			gl.readPixels(0, 0, OUT_DATA_WIDTH, OUT_DATA_HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
 		};
 		blit();
-/*
-		for (var i=0; i<outBuffer.length; ++i) {
-			if (outBuffer[i] != 0) {
-				console.info(i + ', ' + outBuffer[i]);
-			}
-		}
-*/
-		var result = vec4_to_int(outBuffer, 0);
 
+		var result = vec4_to_int(outBuffer, 0);
 		console.info(result);
+/*
+		function getLine(source, index, size) {
+			var line = new Array(size);
+			for (var i=0; i<size; ++i) {
+				line[i] = String.fromCharCode(source[index + i]);
+			}
+			return line.join('');
+		}
+
 		for (var i=0; i<4; ++i) {
 			console.info(i + ', ' + outBuffer[i].toString(16));
 		}
+*/
 	}
 
 	function vec4_to_int(outBuffer, offset) {
