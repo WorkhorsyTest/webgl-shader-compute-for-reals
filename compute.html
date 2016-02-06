@@ -2,10 +2,10 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>WebGL Untar Example</title>
+		<title>WebGL Compute Example</title>
 	</head>
 	<body>
-		<input id="fileInput" type="file" required="required" />
+		<button id="go">Go!</button>
 	</body>
 <script id="vshader" type="text/plain">
 	attribute vec2 vtxpos;
@@ -20,56 +20,12 @@
 	varying vec2 texpos;
 	uniform sampler2D tex0;
 
-	const float A = 97.0 / 255.0;
-	const float B = 98.0 / 255.0;
-	const float C = 99.0 / 255.0;
-	const float SPACE = 95.0 / 255.0;
-	const float _0 = 48.0 / 255.0;
-	const float _1 = 49.0 / 255.0;
-	const float _2 = 50.0 / 255.0;
-	const float _3 = 51.0 / 255.0;
-	const float _4 = 52.0 / 255.0;
-	const float _5 = 53.0 / 255.0;
-	const float _6 = 54.0 / 255.0;
-	const float _7 = 55.0 / 255.0;
-	const float _8 = 56.0 / 255.0;
-	const float _9 = 57.0 / 255.0;
-
 	float in_data_length() { return IN_DATA_LENGTH; }
 	float in_data_width() { return IN_DATA_SIZE; }
 	float in_data_height() { return IN_DATA_SIZE; }
 	float out_data_width() { return OUT_DATA_WIDTH; }
 	float out_data_height() { return OUT_DATA_HEIGHT; }
-/*
-	int shift_right(int data, int times) {
-		if (times > 0) {
-			return int(float(data) / exp(vec2(2.0, float(times))));
-		} else {
-			return data;
-		}
-	}
 
-	int shift_left(int data, const int times) {
-		if (times > 0)
-			return int(float(data) * exp(vec2(2.0, float(times))));
-		else
-			return data;
-	}
-
-	vec4 int_to_vec4(const int data) {
-		int mask = shift_left(shift_right(data, 8), 8);
-		float a = float(data - mask) / 255.0;
-
-		mask = shift_left(shift_right(data, 16), 16);
-		float g = float(shift_right(data - mask, 8)) / 255.0;
-
-		mask = shift_left(shift_right(data, 24), 24);
-		float b = float(shift_right(data - mask, 16)) / 255.0;
-
-		float r = float(shift_right(data, 24)) / 255.0;
-		return vec4(r, g, b, a);
-	}
-*/
 	int get_output_index() {
 		float x = floor(texpos.x * out_data_width());
 		float y = floor(texpos.y * out_data_width());
@@ -77,68 +33,66 @@
 		return int(i);
 	}
 
-	vec4 get_input_bytes(int index) {
-		// Convert the 1D index to a 2D index (x and y)
-		float findex = float(index);
-		float x = floor(mod(findex, in_data_height()));
-		float y = floor(findex / in_data_height());
-
-		// Get the pixel at x and y
-		vec2 cords = vec2(x / in_data_width(), y / in_data_height());
-		vec4 data = texture2D(tex0, cords);
-		return data;
+	int shift_right(int data, int times) {
+	    if (times > 0) {
+	        return data / int(pow(2.0, float(times)));
+	    } else {
+	        return data;
+	    }
 	}
 
-	void set_output_bytes(vec4 bytes) {
-		gl_FragColor = bytes;
+	int shift_left(int data, const int times) {
+	    if (times > 0) {
+	        return data * int(pow(2.0, float(times)));
+	    } else {
+	        return data;
+	    }
+	}
+
+	vec4 int_to_vec4(const int data) {
+	    int mask = shift_left(shift_right(data, 8), 8);
+	    float r = float(data - mask) / 255.0;
+
+	    mask = shift_left(shift_right(data, 16), 16);
+	    float g = float(shift_right(data - mask, 8)) / 255.0;
+
+	    mask = shift_left(shift_right(data, 24), 24);
+	    float b = float(shift_right(data - mask, 16)) / 255.0;
+
+	    float a = float(shift_right(data, 24)) / 255.0;
+	    return vec4(r, g, b, a);
+	}
+
+	const int N = 43;
+
+	int fibonacci() {
+		if (N <= 1) {
+			return N;
+		}
+		int result = 1;
+		int prev = 1;
+		for (int i=2; i<N; ++i) {
+			int temp = result;
+			result += prev;
+			prev = temp;
+		}
+		return result;
 	}
 
 	void main() {
-		//texture2D(tex0, vec2(texpos.x, texpos.y));
-		//texture2D(tex0, vec2(0.0 / in_data_width(), 0.0 / in_data_height()));
-		const int TAR_TYPE_FILE = 0;
-		const int TAR_TYPE_DIR = 5;
-
-		const int TAR_HEADER_SIZE = 512;
-		const int TAR_TYPE_OFFSET = 156;
-		const int TAR_TYPE_SIZE = (TAR_TYPE_OFFSET+1);
-		const int TAR_SIZE_OFFSET = 124;
-		const int TAR_SIZE_SIZE = (TAR_SIZE_OFFSET+12);
-		const int TAR_NAME_OFFSET = 0;
-		const int TAR_NAME_SIZE = (TAR_NAME_OFFSET+100);
-		int i = get_output_index();
-
-		if (i >= TAR_NAME_OFFSET/4 && i < TAR_NAME_SIZE/4) {
-			vec4 bytes = get_input_bytes(i);
-			//bytes = vec4(0, 0, 0, 0);
-			set_output_bytes(bytes);
-		} else if (i >= TAR_SIZE_OFFSET/4 && i < TAR_SIZE_SIZE/4) {
-			vec4 bytes = get_input_bytes(i);
-			//bytes = vec4(0, 0, 0, 0);
-			set_output_bytes(bytes);
-		} else if (i >= TAR_TYPE_OFFSET/4 && i <= TAR_TYPE_SIZE/4) {
-			vec4 bytes = get_input_bytes(i);
-			bytes = vec4(bytes.r, 0, 0, 0);
-			//bytes = vec4(0, 0, 0, 0);
-			set_output_bytes(bytes);
-/*
-		} else if (i >= 0 && i <= int(in_data_length()) * 4) {
-			vec4 file_name[25];
-			vec4 bytes = get_input_bytes(i);
-			set_output_bytes(bytes);
-*/
+		if (get_output_index() == 0) {
+			int result = fibonacci();
+			gl_FragColor = int_to_vec4(result);
+			//gl_FragColor = vec4(float(0x19) / 255.0, float(0xD6) / 255.0, float(0x99) / 255.0, float(0xA5) / 255.0);
 		} else {
-			//vec4 bytes = get_input_bytes(i);
-			//set_bytes(bytes);
-			gl_FragColor = vec4(0, 0, 0, 0);
+			//gl_FragColor = vec4(0, 0, 0, 0);
 		}
 	}
 </script>
 <script type="text/javascript">
-/*
-	. How do we write more than one chunk as output at a time?
-*/
-	function main(array_buffer) {
+
+	function main() {
+		var array_buffer = new ArrayBuffer(8);
 		var OUT_DATA_WIDTH = 128;
 		var OUT_DATA_HEIGHT = 128;
 		var IN_DATA_SIZE = Math.pow(2, 7);//128 * 128 texture;
@@ -257,36 +211,23 @@
 			gl.uniform1i(program.sampler[0], 0);
 			gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 			gl.readPixels(0, 0, OUT_DATA_WIDTH, OUT_DATA_HEIGHT, gl.RGBA, gl.UNSIGNED_BYTE, outBuffer);
-
-			var LINE_SIZE = 100;
-			var BUFFER_SIZE = IN_DATA_LENGTH;// outBuffer.length
-			for (var i=0; i<outBuffer.length; i+=LINE_SIZE) {
-				console.info(getLine(outBuffer, i, LINE_SIZE));
-			}
 		};
 		blit();
-
-		console.info(getLine(outBuffer, 0, 100));
-		console.info(parseInt(getLine(outBuffer, 124, 136), 8));
-		console.info(getLine(outBuffer, 156, 157));
+/*
+		for (var i=0; i<outBuffer.length; ++i) {
+			if (outBuffer[i] != 0) {
+				console.info(i + ', ' + outBuffer[i]);
+			}
+		}
+*/
+		for (var i=0; i<4; ++i) {
+			console.info(i + ', ' + outBuffer[i].toString(16));
+		}
 	}
 
-	var fileInput = document.getElementById('fileInput');
-	fileInput.onchange = function() {
-		// Just return if there is no file selected
-		if (fileInput.files.length === 0) {
-			entryList.innerHTML = 'No file selected';
-			return;
-		}
+	document.getElementById('go').addEventListener('click', function() {
+		main();
+	});
 
-		// Get the selected file
-		var file = fileInput.files[0];
-		var reader = new FileReader();
-		reader.onload = function (evt) {
-			var array_buffer = reader.result;
-			main(array_buffer);
-		};
-		reader.readAsArrayBuffer(file);
-	};
 </script>
 </html>
