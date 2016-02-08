@@ -144,6 +144,7 @@
 			var lastError = gl.getShaderInfoLog(shaderVertex);
 			console.error("Shader compile error:" + lastError);
 			gl.deleteShader(shaderVertex);
+			return null;
 		}
 
 		// Inject our sizes into the shader source code
@@ -160,6 +161,7 @@
 			var lastError = gl.getShaderInfoLog(shaderFragment);
 			console.error("Shader compile error:" + lastError);
 			gl.deleteShader(shaderFragment);
+			return null;
 		}
 
 		// Build the program
@@ -171,6 +173,7 @@
 		if (! linked) {
 			var lastError = gl.getProgramInfoLog(program);
 			console.error("Program link error:" + lastError);
+			return null;
 		}
 		gl.useProgram(program);
 
@@ -233,7 +236,9 @@
 		var OUT_DATA_SIZE = Math.pow(2, 7); //128 * 128 texture;
 		var IN_DATA_SIZE = Math.pow(2, 7); //128 * 128 texture;
 		var gl = init(OUT_DATA_SIZE, IN_DATA_SIZE);
+		if (! gl) return;
 		var program = build(gl, OUT_DATA_SIZE, IN_DATA_SIZE);
+		if (! program) return;
 
 		var start_time = new Date().getTime();
 		run(gl, program, OUT_DATA_SIZE, IN_DATA_SIZE);
