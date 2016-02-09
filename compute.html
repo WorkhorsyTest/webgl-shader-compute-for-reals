@@ -135,39 +135,39 @@
 
 	function build(gl, OUT_DATA_SIZE, IN_DATA_SIZE) {
 		// Compile the Vertex Shader
-		var shaderSource = document.getElementById('vshader').textContent;
-		var shaderVertex = gl.createShader(gl.VERTEX_SHADER);
-		gl.shaderSource(shaderVertex, shaderSource);
-		gl.compileShader(shaderVertex);
-		var compiled = gl.getShaderParameter(shaderVertex, gl.COMPILE_STATUS);
+		var shader_source = document.getElementById('vshader').textContent;
+		var vertex_shader = gl.createShader(gl.VERTEX_SHADER);
+		gl.shaderSource(vertex_shader, shader_source);
+		gl.compileShader(vertex_shader);
+		var compiled = gl.getShaderParameter(vertex_shader, gl.COMPILE_STATUS);
 		if (! compiled) {
-			var lastError = gl.getShaderInfoLog(shaderVertex);
+			var lastError = gl.getShaderInfoLog(vertex_shader);
 			console.error("Shader compile error:" + lastError);
-			gl.deleteShader(shaderVertex);
+			gl.deleteShader(vertex_shader);
 			return null;
 		}
 
 		// Inject our sizes into the shader source code
-		var shaderSource = document.getElementById('fshader').textContent;
-		shaderSource = shaderSource.replace(/OUT_DATA_SIZE/g, OUT_DATA_SIZE + '.0');
-		shaderSource = shaderSource.replace(/IN_DATA_SIZE/g, IN_DATA_SIZE + '.0');
+		var shader_source = document.getElementById('fshader').textContent;
+		shader_source = shader_source.replace(/OUT_DATA_SIZE/g, OUT_DATA_SIZE + '.0');
+		shader_source = shader_source.replace(/IN_DATA_SIZE/g, IN_DATA_SIZE + '.0');
 
 		// Compile the Fragment Shader
-		var shaderFragment = gl.createShader(gl.FRAGMENT_SHADER);
-		gl.shaderSource(shaderFragment, shaderSource);
-		gl.compileShader(shaderFragment);
-		var compiled = gl.getShaderParameter(shaderFragment, gl.COMPILE_STATUS);
+		var fragment_shader = gl.createShader(gl.FRAGMENT_SHADER);
+		gl.shaderSource(fragment_shader, shader_source);
+		gl.compileShader(fragment_shader);
+		var compiled = gl.getShaderParameter(fragment_shader, gl.COMPILE_STATUS);
 		if (! compiled) {
-			var lastError = gl.getShaderInfoLog(shaderFragment);
+			var lastError = gl.getShaderInfoLog(fragment_shader);
 			console.error("Shader compile error:" + lastError);
-			gl.deleteShader(shaderFragment);
+			gl.deleteShader(fragment_shader);
 			return null;
 		}
 
 		// Build the program
 		var program = gl.createProgram();
-		gl.attachShader(program, shaderVertex);
-		gl.attachShader(program, shaderFragment);
+		gl.attachShader(program, vertex_shader);
+		gl.attachShader(program, fragment_shader);
 		gl.linkProgram(program);
 		var linked = gl.getProgramParameter(program, gl.LINK_STATUS);
 		if (! linked) {
@@ -191,6 +191,7 @@
 		program.vtxpos = gl.getAttribLocation(program, 'vtxpos');
 		program.sampler = [gl.getUniformLocation(program, 'tex0')];
 		program.tex = [gl.createTexture()];
+
 
 		return program;
 	}
