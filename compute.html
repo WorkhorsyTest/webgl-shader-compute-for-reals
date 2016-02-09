@@ -6,19 +6,77 @@
 	</head>
 	<body>
 		<button id="go">Go!</button>
+		<img id="example" src="example.png" />
 	</body>
 <script id="vshader" type="text/plain">
 	attribute vec2 vtxpos;
 	varying vec2 texpos;
+
+	uniform float texelWidthOffset;
+	uniform float texelHeightOffset;
+
+	varying vec2 centerTextureCoordinate;
+	varying vec2 oneStepLeftTextureCoordinate;
+	varying vec2 twoStepsLeftTextureCoordinate;
+	varying vec2 threeStepsLeftTextureCoordinate;
+	varying vec2 fourStepsLeftTextureCoordinate;
+	varying vec2 oneStepRightTextureCoordinate;
+	varying vec2 twoStepsRightTextureCoordinate;
+	varying vec2 threeStepsRightTextureCoordinate;
+	varying vec2 fourStepsRightTextureCoordinate;
+
 	void main() {
 		texpos = (vtxpos / 2.) + vec2(0.5, 0.5);
 		gl_Position = vec4(vtxpos, 0, 1);
+
+		vec2 firstOffset = vec2(texelWidthOffset, texelHeightOffset);
+		vec2 secondOffset = vec2(2.0 * texelWidthOffset, 2.0 * texelHeightOffset);
+		vec2 thirdOffset = vec2(3.0 * texelWidthOffset, 3.0 * texelHeightOffset);
+		vec2 fourthOffset = vec2(4.0 * texelWidthOffset, 4.0 * texelHeightOffset);
+
+		centerTextureCoordinate = texpos;
+		oneStepLeftTextureCoordinate = texpos - firstOffset;
+		twoStepsLeftTextureCoordinate = texpos - secondOffset;
+		threeStepsLeftTextureCoordinate = texpos - thirdOffset;
+		fourStepsLeftTextureCoordinate = texpos - fourthOffset;
+		oneStepRightTextureCoordinate = texpos + firstOffset;
+		twoStepsRightTextureCoordinate = texpos + secondOffset;
+		threeStepsRightTextureCoordinate = texpos + thirdOffset;
+		fourStepsRightTextureCoordinate = texpos + fourthOffset;
 	}
 </script>
 <script id="fshader" type="text/plain">
 	precision mediump float;
 	varying vec2 texpos;
 	uniform sampler2D tex0;
+
+	varying vec2 centerTextureCoordinate;
+	varying vec2 oneStepLeftTextureCoordinate;
+	varying vec2 twoStepsLeftTextureCoordinate;
+	varying vec2 threeStepsLeftTextureCoordinate;
+	varying vec2 fourStepsLeftTextureCoordinate;
+	varying vec2 oneStepRightTextureCoordinate;
+	varying vec2 twoStepsRightTextureCoordinate;
+	varying vec2 threeStepsRightTextureCoordinate;
+	varying vec2 fourStepsRightTextureCoordinate;
+
+	void main() {
+		lowp vec4 fragmentColor = texture2D(tex0, centerTextureCoordinate) * 0.38026;
+
+		fragmentColor += texture2D(tex0, oneStepLeftTextureCoordinate) * 0.27667;
+		fragmentColor += texture2D(tex0, oneStepRightTextureCoordinate) * 0.27667;
+
+		fragmentColor += texture2D(tex0, twoStepsLeftTextureCoordinate) * 0.08074;
+		fragmentColor += texture2D(tex0, twoStepsRightTextureCoordinate) * 0.08074;
+
+		fragmentColor += texture2D(tex0, threeStepsLeftTextureCoordinate) * -0.02612;
+		fragmentColor += texture2D(tex0, threeStepsRightTextureCoordinate) * -0.02612;
+
+		fragmentColor += texture2D(tex0, fourStepsLeftTextureCoordinate) * -0.02143;
+		fragmentColor += texture2D(tex0, fourStepsRightTextureCoordinate) * -0.02143;
+
+		gl_FragColor = fragmentColor;
+	}
 
 	float in_data_size() { return IN_DATA_SIZE; }
 	float out_data_size() { return OUT_DATA_SIZE; }
@@ -29,7 +87,7 @@
 		float i = (y * in_data_size()) + x;
 		return int(i);
 	}
-
+/*
 	int shift_right(int data, int times) {
 		if (times > 0) {
 			return data / int(pow(2.0, float(times)));
@@ -80,13 +138,16 @@
 
 	void main() {
 		if (get_output_index() == 0) {
-			int result = fibonacci();
-			gl_FragColor = int_to_vec4(result);
+
+			gl_FragColor = vec4(0, 0, 1, 1);
 			//gl_FragColor = vec4(float(0x19) / 255.0, float(0xD6) / 255.0, float(0x99) / 255.0, float(0xA5) / 255.0);
 		} else {
-			//gl_FragColor = vec4(0, 0, 0, 0);
+			gl_FragColor = vec4(0, 1, 0, 1);
 		}
+		vec4 color = texture2D(tex0, texpos);
+		gl_FragColor = color;
 	}
+*/
 </script>
 <script type="text/javascript">
 
@@ -209,18 +270,16 @@
 		};
 	}
 
-	function run(settings, OUT_DATA_SIZE, IN_DATA_SIZE) {
+	function run(data, settings, OUT_DATA_SIZE, IN_DATA_SIZE) {
 		var gl = settings.gl;
 		var program = settings.program;
-		var array_buffer = new ArrayBuffer(8);
 
 		// Create the input buffer, and copy the data to it
 		var in_buffer = new Uint8Array(4 * IN_DATA_SIZE * IN_DATA_SIZE);
 		console.info('In buffer size:  ' + in_buffer.byteLength);
-		console.info('Data size:       ' + array_buffer.byteLength);
-		var view = new Uint8Array(array_buffer);
-		for (var i = 0; i < view.length; ++i) {
-			in_buffer[i] = view[i];
+		console.info('Data size:       ' + data.byteLength);
+		for (var i = 0; i < data.length; ++i) {
+			in_buffer[i] = data[i];
 		}
 
 		// Create the output buffer
@@ -273,8 +332,15 @@
 		settings = build(settings, OUT_DATA_SIZE, IN_DATA_SIZE);
 		if (! settings) return;
 
+		var image = document.querySelector('#example');
+		var canvas = document.createElement('canvas');
+		var ctx = canvas.getContext('2d');
+		ctx.drawImage(image, 0, 0);
+		var data = ctx.getImageData(0, 0, image.width, image.height);
+		console.info(data);
+
 		var start_time = new Date().getTime();
-		run(settings, OUT_DATA_SIZE, IN_DATA_SIZE);
+		run(data.data, settings, OUT_DATA_SIZE, IN_DATA_SIZE);
 		var end_time = new Date().getTime();
 		console.info(end_time - start_time);
 		//cleanup(settings);
